@@ -1,0 +1,20 @@
+const BASE_URL = "https://api.open-meteo.com/v1/forecast";
+
+export async function getWeather(lat: string, lon: string) {
+  try {
+    const response = await fetch(
+      `${BASE_URL}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code`,
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch weather");
+    }
+
+    const data = await response.json();
+
+    return data.current;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}

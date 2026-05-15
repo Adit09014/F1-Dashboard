@@ -3,6 +3,9 @@
 import { Card, CardContent, Grid, Typography } from "@mui/material";
 import ConstructorStandingsCard from "./Cards/Constructor";
 import DriverStadingsCard from "./Cards/DriverStanding";
+import NextRaceCountdown from "./Cards/RaceCount";
+import GrandPrix from "./Cards/GrandPrix";
+import WeatherCard from "./Cards/WeatherCard";
 
 export default function DashboardPage() {
   const cards = [
@@ -65,15 +68,11 @@ export default function DashboardPage() {
         <div className="flex-1">
           <Grid container spacing={1}>
             <Grid size={6}>
-              <Card sx={{ height: 220 }}>
-                <CardContent>Race Countdown</CardContent>
-              </Card>
+              <NextRaceCountdown />
             </Grid>
 
             <Grid size={6}>
-              <Card sx={{ height: 220 }}>
-                <CardContent>Grand Prix</CardContent>
-              </Card>
+              <GrandPrix />
             </Grid>
             <Grid size={6}>
               <DriverStadingsCard />
@@ -88,9 +87,7 @@ export default function DashboardPage() {
         <div className="flex-1 ">
           <Grid container spacing={1}>
             <Grid size={6}>
-              <Card sx={{ height: 440 }}>
-                <CardContent>Fastest Lap</CardContent>
-              </Card>
+              <WeatherCard />
             </Grid>
 
             <Grid size={6}>
