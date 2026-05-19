@@ -1,4 +1,0 @@
-Change Fastest lap card to weather card
-
-if live race: use OPENF1 api 
-if no live race: use WeatherApi, using lang and loti given in circuit api
