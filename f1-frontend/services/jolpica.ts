@@ -110,78 +110,41 @@ export async function getCurrentSchedule() {
 
 export async function getSession() {
   try {
-    const response = await fetch(`${BASE_URL}/current.json`);
+    const now = new Date();
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch race schedule");
-    }
+    const response = await fetch(`${BASE_URL}/current/next/qualifying.json`);
 
     const data = await response.json();
 
-    const races = data.MRData.RaceTable.Races;
+    const [race] = data.MRData.RaceTable.Races;
 
-    const now = new Date();
-
-    for (const race of races) {
-      const sessions = [
-        {
-          type: "FP1",
-          ...race.FirstPractice,
-        },
-        {
-          type: "FP2",
-          ...race.SecondPractice,
-        },
-        race.ThirdPractice && {
-          type: "FP3",
-          ...race.ThirdPractice,
-        },
-        {
-          type: "Qualifying",
-          ...race.Qualifying,
-        },
-        race.Sprint && {
-          type: "Sprint",
-          ...race.Sprint,
-        },
-        {
-          type: "Race",
-          date: race.date,
-          time: race.time,
-        },
-      ].filter(Boolean);
-
-      for (const session of sessions) {
-        const start = new Date(`${session.date}T${session.time}`);
-
-        const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-
-        // LIVE SESSION
-        if (now >= start && now <= end) {
-          return {
-            status: "LIVE",
-            session: session.type,
-            raceName: race.raceName,
-            country: race.Circuit.Location.country,
-          };
-        }
-
-        // UPCOMING SESSION
-        if (start > now) {
-          return {
-            status: "UPCOMING",
-            session: session.type,
-            raceName: race.raceName,
-            date: start,
-            country: race.Circuit.Location.country,
-          };
-        }
-      }
+    if (!race) {
+      return {
+        status: "UPCOMING",
+      };
     }
 
-    // NO ACTIVE WEEKEND
+    const qualiDate = new Date(`${race.date}T${race.time}`);
+
+    if (isNaN(qualiDate.getTime())) {
+      throw new Error("Invalid qualifying date");
+    }
+
+    console.log({
+      now: now.toISOString(),
+      qualiDate: qualiDate.toISOString(),
+    });
+
+    if (now < qualiDate) {
+      return {
+        status: "Quali_Done",
+        raceRound: Number(race.round),
+      };
+    }
+
     return {
-      status: "IDLE",
+      status: "Live",
+      raceRound: Number(race.round),
     };
   } catch (error) {
     console.error(error);
@@ -289,5 +252,30 @@ export async function getBiggestClimber() {
   } catch (error) {
     console.error(error);
     return null;
+  }
+}
+
+export async function getQualiResult(round: number | string) {
+  try {
+    const currentSeason = new Date().getFullYear();
+
+    const url = `${BASE_URL}/${currentSeason}/${round}/qualifying.json`;
+    console.log(url);
+
+    const response = await fetch(url);
+    
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch qualifying results");
+    }
+
+    const data = await response.json();
+    console.log(data)
+    return (
+      data.MRData?.RaceTable?.Races?.[0]?.QualifyingResults ?? []
+    );
+  } catch (error) {
+    console.error(error);
+    return [];
   }
 }

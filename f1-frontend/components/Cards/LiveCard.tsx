@@ -16,6 +16,7 @@ import { getSession } from "@/services/jolpica";
 import { getLastRaceResults } from "@/services/jolpica";
 import { getData } from "@/services/jolpica";
 import { getBiggestClimber } from "@/services/jolpica";
+import { getQualiResult } from "@/services/jolpica";
 
 // Team colors mapped by constructor ID
 const TEAM_COLORS: Record<string, string> = {
@@ -77,23 +78,36 @@ export default function LiveCard() {
   const [climber, setClimber] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [lastRace, setLastRace] = useState<any>(null);
+  const [qualiResults, setQualiResults] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const data = await getSession();
         setSession(data);
+
         const grid = await getLastRaceResults();
         setDriver(grid.Results);
         setLastRace(grid);
+
         const lapTime = await getData();
         setLap(lapTime);
+
         const climb = await getBiggestClimber();
         setClimber(climb);
+
+        // Only fetch quali if session says it's done
+        if (data?.status === "Quali_Done") {
+          const qualiData = await getQualiResult(data?.raceRound);
+          console.log(data)
+          await console.log(qualiData)
+          setQualiResults(qualiData ?? []);
+        }
       } finally {
         setLoading(false);
       }
     }
+
     fetchData();
   }, []);
 
@@ -140,7 +154,7 @@ export default function LiveCard() {
             </div>
           </div>
           <div style={styles.roundBadge}>
-            Round {session.round} · {session.season}
+            Round {lastRace.round} · {lastRace.season}
           </div>
         </div>
 
@@ -156,92 +170,191 @@ export default function LiveCard() {
               flexDirection: "column",
             }}
           >
-            <div style={styles.panelTitle}>Race Classification</div>
-            <TableContainer
-              sx={{
-                flex: 1,
-                overflow: "auto",
-                "&::-webkit-scrollbar": { width: 4 },
-                "&::-webkit-scrollbar-track": { background: "#111" },
-                "&::-webkit-scrollbar-thumb": {
-                  background: "#2a2a30",
-                  borderRadius: 2,
-                },
-              }}
-            >
-              <Table size="small" stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ ...muiTh, width: 36 }}>Pos</TableCell>
-                    <TableCell sx={muiTh}>Driver</TableCell>
-                    <TableCell sx={{ ...muiTh, textAlign: "right" }}>
-                      Pts
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {driver.map((drv, index) => {
-                    const pos = Number(drv.position);
-                    const posColor = POSITION_COLORS[pos] ?? "#5a5a66";
-                    return (
-                      <TableRow
-                        key={index}
-                        sx={{
-                          borderBottom: "1px solid #161618",
-                          "&:hover": { background: "#15151a" },
-                          "&:last-child td": { border: 0 },
-                        }}
-                      >
-                        <TableCell
-                          sx={{
-                            ...muiTd,
-                            fontWeight: 800,
-                            fontSize: 15,
-                            color: posColor,
-                            width: 36,
-                          }}
-                        >
-                          {pos}
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            ...muiTd,
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          <TeamBar
-                            constructorId={drv.Constructor?.constructorId ?? ""}
-                          />
-                          <span style={styles.driverName}>
-                            {drv.Driver.familyName}
-                          </span>
-                          <span style={styles.driverAbbr}>
-                            {drv.Driver.code}
-                          </span>
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            ...muiTd,
-                            textAlign: "right",
-                            color:
-                              pos === 1
-                                ? "#E8C14A"
-                                : pos === 2
-                                  ? "#A8B8C8"
-                                  : pos === 3
-                                    ? "#CD8B56"
-                                    : "#7070a0",
-                          }}
-                        >
-                          {drv.points}
+            {session.status === "UPCOMING" && (
+              <>
+                <div style={styles.panelTitle}>Race Classification</div>
+                <TableContainer
+                  sx={{
+                    flex: 1,
+                    overflow: "auto",
+                    "&::-webkit-scrollbar": { width: 4 },
+                    "&::-webkit-scrollbar-track": { background: "#111" },
+                    "&::-webkit-scrollbar-thumb": {
+                      background: "#2a2a30",
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ ...muiTh, width: 36 }}>Pos</TableCell>
+                        <TableCell sx={muiTh}>Driver</TableCell>
+                        <TableCell sx={{ ...muiTh, textAlign: "right" }}>
+                          Pts
                         </TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {driver.map((drv, index) => {
+                        const pos = Number(drv.position);
+                        const posColor = POSITION_COLORS[pos] ?? "#5a5a66";
+                        return (
+                          <TableRow
+                            key={index}
+                            sx={{
+                              borderBottom: "1px solid #161618",
+                              "&:hover": { background: "#15151a" },
+                              "&:last-child td": { border: 0 },
+                            }}
+                          >
+                            <TableCell
+                              sx={{
+                                ...muiTd,
+                                fontWeight: 800,
+                                fontSize: 15,
+                                color: posColor,
+                                width: 36,
+                              }}
+                            >
+                              {pos}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                ...muiTd,
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <TeamBar
+                                constructorId={
+                                  drv.Constructor?.constructorId ?? ""
+                                }
+                              />
+                              <span style={styles.driverName}>
+                                {drv.Driver.familyName}
+                              </span>
+                              <span style={styles.driverAbbr}>
+                                {drv.Driver.code}
+                              </span>
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                ...muiTd,
+                                textAlign: "right",
+                                color:
+                                  pos === 1
+                                    ? "#E8C14A"
+                                    : pos === 2
+                                      ? "#A8B8C8"
+                                      : pos === 3
+                                        ? "#CD8B56"
+                                        : "#7070a0",
+                              }}
+                            >
+                              {drv.points}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
+
+            {session.status === "Quali_Done" && (
+              <>
+                <div style={styles.panelTitle}>Race Classification</div>
+                <TableContainer
+                  sx={{
+                    flex: 1,
+                    overflow: "auto",
+                    "&::-webkit-scrollbar": { width: 4 },
+                    "&::-webkit-scrollbar-track": { background: "#111" },
+                    "&::-webkit-scrollbar-thumb": {
+                      background: "#2a2a30",
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ ...muiTh, width: 36 }}>Pos</TableCell>
+                        <TableCell sx={muiTh}>Driver</TableCell>
+                        <TableCell sx={{ ...muiTh, textAlign: "right" }}>
+                          Time
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {qualiResults.map((drv, index) => {
+                        const pos = Number(drv.position);
+                        const posColor = POSITION_COLORS[pos] ?? "#5a5a66";
+                        return (
+                          <TableRow
+                            key={index}
+                            sx={{
+                              borderBottom: "1px solid #161618",
+                              "&:hover": { background: "#15151a" },
+                              "&:last-child td": { border: 0 },
+                            }}
+                          >
+                            <TableCell
+                              sx={{
+                                ...muiTd,
+                                fontWeight: 800,
+                                fontSize: 15,
+                                color: posColor,
+                                width: 36,
+                              }}
+                            >
+                              {pos}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                ...muiTd,
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <TeamBar
+                                constructorId={
+                                  drv.Constructor?.constructorId ?? ""
+                                }
+                              />
+                              <span style={styles.driverName}>
+                                {drv.Driver.familyName}
+                              </span>
+                              <span style={styles.driverAbbr}>
+                                {drv.Driver.code}
+                              </span>
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                ...muiTd,
+                                textAlign: "right",
+                                color:
+                                  pos === 1
+                                    ? "#c084fc"
+                                    : pos <= 3
+                                      ? "#E8C14A"
+                                      : "#7070a0",
+                                fontFamily: "'Barlow Condensed', sans-serif",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {drv.Q3 ?? drv.Q2 ?? drv.Q1 ?? "—"}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
           </div>
 
           {/* Right: two stat cards stacked — 35% */}
