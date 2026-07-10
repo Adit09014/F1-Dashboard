@@ -5,6 +5,9 @@ import { getSession } from "@/services/jolpica";
 import RaceCenterHeader from "./RaceCenter/RaceCenterHeader";
 import RaceClassification from "./RaceCenter/Upcoming";
 
+
+
+
 export default function RaceCenter() {
   const [session, setSession] = useState<any>(null);
 
@@ -27,7 +30,6 @@ export default function RaceCenter() {
 
   return (
     <div>
-      <RaceCenterHeader session={session} />
 
       {session.status === "UPCOMING" && <RaceClassification />}
       {/* {session.status === "PRACTICE" && <PracticeView />}
