@@ -1,6 +1,6 @@
-// app/driver-standingss/page.tsx
+// app/driver-standings/page.tsx
 
-import DriverStandings from "@/components/DriverStandings";
+import DriverStandings from "@/components/DriverStandings/DriverStandings";
 
 export default function RaceCenterPage() {
   return <DriverStandings />;

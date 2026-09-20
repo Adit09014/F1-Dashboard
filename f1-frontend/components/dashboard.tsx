@@ -8,6 +8,8 @@ import GrandPrix from "./Cards/GrandPrix";
 import WeatherCard from "./Cards/WeatherCard";
 import LiveCard from "./Cards/LiveCard";
 
+import PredictionCard from "./Cards/PredictionCard";
+
 export default function DashboardPage() {
   const cards = [
     {
@@ -92,9 +94,7 @@ export default function DashboardPage() {
             </Grid>
 
             <Grid size={6}>
-              <Card sx={{ height: 440, bgcolor: "black" }}>
-                <CardContent>Prediction</CardContent>
-              </Card>
+              <PredictionCard />
             </Grid>
             <Grid size={12}>
               <LiveCard />

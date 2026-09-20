@@ -97,8 +97,8 @@ export default function LiveCard() {
         setClimber(climb);
 
         // Only fetch quali if session says it's done
-        if (data?.status === "Quali_Done") {
-          const qualiData = await getQualiResult(data?.raceRound);
+        if (data?.status === "Quali_Done" && data?.raceRound) {
+          const qualiData = await getQualiResult(data.raceRound);
           console.log(data)
           await console.log(qualiData)
           setQualiResults(qualiData ?? []);

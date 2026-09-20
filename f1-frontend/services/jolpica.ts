@@ -260,7 +260,7 @@ export async function getQualiResult(round: number | string) {
     const currentSeason = new Date().getFullYear();
 
     const url = `${BASE_URL}/${currentSeason}/${round}/qualifying.json`;
-    console.log(url);
+    // console.log(url);
 
     const response = await fetch(url);
     
@@ -275,6 +275,31 @@ export async function getQualiResult(round: number | string) {
       data.MRData?.RaceTable?.Races?.[0]?.QualifyingResults ?? []
     );
   } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export async function getSeason(){
+  try{
+    const currentSeason = new Date().getFullYear();
+    const url = `${BASE_URL}/${currentSeason}.json`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch qualifying results");
+    }
+
+    const data = await response.json();
+    const races = data.MRData?.RaceTable?.Races ?? [];
+    console.log(races.length);
+    return (
+      data.MRData?.RaceTable?.Races ?? []
+    );
+
+  }
+  catch(error){
     console.error(error);
     return [];
   }
